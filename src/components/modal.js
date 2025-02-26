@@ -4,31 +4,37 @@ function openPopup(el) {
 }
 
 function closePopup(el) {
-  el.target.parentNode.parentNode.classList.remove("popup_is-opened");
-  document.removeEventListener("keydown", escListner);
-}
-
-function closeModal(el) {
-  el.target.classList.remove("popup_is-opened");
+  if (el.target.closest(".popup_is-opened") === null) {
+    document
+      .querySelector(".popup_is-opened")
+      .classList.remove("popup_is-opened");
+  } else {
+    el.target.closest(".popup_is-opened").classList.remove("popup_is-opened");
+  }
   document.removeEventListener("keydown", escListner);
 }
 
 function escListner(el) {
   if (el.key === "Escape") {
-    document
-      .querySelector(".popup_is-opened")
-      .classList.remove("popup_is-opened");
+    closePopup(el);
   }
-  document.removeEventListener("keydown", escListner);
 }
 
-function modalCloseByOverlay(el) {
+export const setModalWindowEventListeners = (modalWindow, handle) => {
+  modalWindow.addEventListener("submit", handle);
+  modalWindow
+    .querySelector(".popup__close")
+    .addEventListener("click", closePopup);
+  modalWindow.addEventListener("click", handleCloseByOverlay);
+};
+
+function handleCloseByOverlay(el) {
   if (
     el.target.classList.contains("popup_is-opened") &&
     !el.target.classList.contains("popup__content")
   ) {
-    closeModal(el);
+    closePopup(el);
   }
 }
 
-export { openPopup, escListner, closePopup, modalCloseByOverlay };
+export { openPopup, escListner, closePopup, handleCloseByOverlay };

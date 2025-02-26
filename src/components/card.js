@@ -1,5 +1,4 @@
-// Функция создания карточки
-function createCard(name, link, openImg) {
+function createCard(name, link, openImg, cardLikeSwitch, deleteCard) {
   const cardElement = getCardTemplate();
   const cardImage = cardElement.querySelector(".card__image");
   const imgLikeBtn = cardElement.querySelector(".card__like-button");
@@ -23,8 +22,14 @@ const getCardTemplate = () => {
     .cloneNode(true);
 };
 
-function addCard(cardsList, name, link, openImg) {
-  const cardElement = createCard(name, link, openImg);
+function addCard(cardsList, name, link, openImg, cardLikeSwitch, deleteCard) {
+  const cardElement = createCard(
+    name,
+    link,
+    openImg,
+    cardLikeSwitch,
+    deleteCard
+  );
   cardsList.prepend(cardElement);
 }
 
@@ -37,7 +42,7 @@ function cardLikeSwitch(evt) {
 }
 
 function deleteCard(el) {
-  el.target.parentNode.remove();
+  el.target.closest(".places__item").remove();
 }
 
 export { createCard, cardLikeSwitch, deleteCard, addCard };

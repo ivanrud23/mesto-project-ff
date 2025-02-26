@@ -1,13 +1,12 @@
-import { addCard } from "../components/card.js";
+import { addCard, cardLikeSwitch, deleteCard } from "../components/card.js";
 import {
   closePopup,
   openPopup,
-  modalCloseByOverlay,
+  setModalWindowEventListeners,
 } from "../components/modal.js";
 import "../pages/index.css";
 
 const cardsList = document.querySelector(".places__list");
-const popups = document.querySelectorAll(".popup");
 
 const addButton = document.querySelector(".profile__add-button");
 const newCardPopup = document.querySelector(".popup_type_new-card");
@@ -22,9 +21,8 @@ const nameInput = editPopup.querySelector(".popup__input_type_name");
 const jobInput = editPopup.querySelector(".popup__input_type_description");
 
 const imagePopup = document.querySelector(".popup_type_image");
+const imageModal = imagePopup.querySelector(".popup__image");
 
-const closeEditPopup = editPopup.querySelector(".popup__close");
-const closeNewCardPopup = newCardPopup.querySelector(".popup__close");
 const closeImgPopup = imagePopup.querySelector(".popup__close");
 
 const profTittle = document.querySelector(".profile__title");
@@ -58,11 +56,12 @@ const initialCards = [
 ];
 
 initialCards.forEach(function (card) {
-  addCard(cardsList, card.name, card.link, openImg);
+  addCard(cardsList, card.name, card.link, openImg, cardLikeSwitch, deleteCard);
 });
 
-newCardForm.addEventListener("submit", handleFormNewCard);
-editForm.addEventListener("submit", handleFormEdit);
+setModalWindowEventListeners(editPopup, handleFormEdit);
+setModalWindowEventListeners(newCardPopup, handleFormNewCard);
+setModalWindowEventListeners(imagePopup);
 
 addButton.addEventListener("click", function () {
   openPopup(newCardPopup);
@@ -74,31 +73,30 @@ editButton.addEventListener("click", function (el) {
   editForm.description.value = profDescr.textContent;
 });
 
-closeEditPopup.addEventListener("click", closePopup);
-closeNewCardPopup.addEventListener("click", closePopup);
-closeImgPopup.addEventListener("click", closePopup);
-
-popups.forEach((popup) => {
-  popup.addEventListener("click", modalCloseByOverlay);
-});
-
 function openImg(evt) {
   openPopup(imagePopup);
-  imagePopup.querySelector(".popup__image").src = evt.target.src;
+  imageModal.src = evt.target.src;
   imagePopup.querySelector(".popup__caption").textContent = evt.target.alt;
-  imagePopup.querySelector(".popup__image").alt = evt.target.alt;
+  imageModal.alt = evt.target.alt;
 }
 
 function handleFormEdit(evt) {
   evt.preventDefault();
   profTittle.textContent = nameInput.value;
   profDescr.textContent = jobInput.value;
-  editPopup.classList.remove("popup_is-opened");
+  closePopup(evt);
 }
 
 function handleFormNewCard(evt) {
   evt.preventDefault();
-  addCard(cardsList, cardName.value, cardLink.value, openImg);
+  addCard(
+    cardsList,
+    cardName.value,
+    cardLink.value,
+    openImg,
+    cardLikeSwitch,
+    deleteCard
+  );
   newCardForm.reset();
   closePopup(evt);
 }
