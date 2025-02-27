@@ -4,13 +4,9 @@ function openPopup(el) {
 }
 
 function closePopup(el) {
-  if (el.target.closest(".popup_is-opened") === null) {
-    document
+      document
       .querySelector(".popup_is-opened")
       .classList.remove("popup_is-opened");
-  } else {
-    el.target.closest(".popup_is-opened").classList.remove("popup_is-opened");
-  }
   document.removeEventListener("keydown", escListner);
 }
 
@@ -20,8 +16,7 @@ function escListner(el) {
   }
 }
 
-export const setModalWindowEventListeners = (modalWindow, handle) => {
-  modalWindow.addEventListener("submit", handle);
+export const setModalWindowEventListeners = (modalWindow) => {
   modalWindow
     .querySelector(".popup__close")
     .addEventListener("click", closePopup);

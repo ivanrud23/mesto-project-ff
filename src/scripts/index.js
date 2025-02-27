@@ -59,13 +59,18 @@ initialCards.forEach(function (card) {
   addCard(cardsList, card.name, card.link, openImg, cardLikeSwitch, deleteCard);
 });
 
-setModalWindowEventListeners(editPopup, handleFormEdit);
-setModalWindowEventListeners(newCardPopup, handleFormNewCard);
+setModalWindowEventListeners(editPopup);
+editForm.addEventListener("submit", handleFormEdit);
+
+setModalWindowEventListeners(newCardPopup);
+newCardForm.addEventListener("submit", handleFormNewCard);
+
 setModalWindowEventListeners(imagePopup);
 
 addButton.addEventListener("click", function () {
   openPopup(newCardPopup);
 });
+
 
 editButton.addEventListener("click", function (el) {
   openPopup(editPopup);
