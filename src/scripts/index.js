@@ -4,9 +4,24 @@ import {
   openPopup,
   setModalWindowEventListeners,
 } from "../components/modal.js";
+import { enableValidation, clearValidation } from "../components/validation.js";
+import {
+  getUsersInfo,
+  getInitialCards,
+  patchEditProfile,
+  postNewCard,
+  deleteCardOnServ,
+  patchAvatar,
+} from "../components/api.js";
 import "../pages/index.css";
 
 const cardsList = document.querySelector(".places__list");
+const profileAvatar = document.querySelector(".profile__image");
+
+const editAvatarBut = document.querySelector(".profile__avatar-botton");
+const editAvatarPopup = document.querySelector(".popup_type_avatar");
+const editAvatarForm = editAvatarPopup.querySelector(".popup__form");
+const avatarUrl = editAvatarPopup.querySelector(".popup__input_type_avatar");
 
 const addButton = document.querySelector(".profile__add-button");
 const newCardPopup = document.querySelector(".popup_type_new-card");
@@ -23,41 +38,36 @@ const jobInput = editPopup.querySelector(".popup__input_type_description");
 const imagePopup = document.querySelector(".popup_type_image");
 const imageModal = imagePopup.querySelector(".popup__image");
 
-const closeImgPopup = imagePopup.querySelector(".popup__close");
-
 const profTittle = document.querySelector(".profile__title");
 const profDescr = document.querySelector(".profile__description");
 
-const initialCards = [
-  {
-    name: "Архыз",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/arkhyz.jpg",
-  },
-  {
-    name: "Челябинская область",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/chelyabinsk-oblast.jpg",
-  },
-  {
-    name: "Иваново",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/ivanovo.jpg",
-  },
-  {
-    name: "Камчатка",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kamchatka.jpg",
-  },
-  {
-    name: "Холмогорский район",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kholmogorsky-rayon.jpg",
-  },
-  {
-    name: "Байкал",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/baikal.jpg",
-  },
-];
+const popupForm = document.querySelector(".popup__form");
+const popupInput = document.querySelector(".popup__input");
 
-initialCards.forEach(function (card) {
-  addCard(cardsList, card.name, card.link, openImg, cardLikeSwitch, deleteCard);
+let userId;
+
+getUsersInfo().then((user) => {
+  profTittle.textContent = user.name;
+  profDescr.textContent = user.about;
+  userId = user._id;
+  profileAvatar.style.backgroundImage = `url(${user.avatar})`;
 });
+
+getInitialCards().then((cardsArray) => {
+  cardsArray.forEach((cardObj) => {
+    addCard(
+      cardsList,
+      openImg,
+      cardLikeSwitch,
+      deleteCardOnServ,
+      cardObj,
+      userId
+    );
+  });
+});
+
+setModalWindowEventListeners(editAvatarPopup);
+editAvatarForm.addEventListener("submit", handleFormEditAvatar);
 
 setModalWindowEventListeners(editPopup);
 editForm.addEventListener("submit", handleFormEdit);
@@ -67,15 +77,23 @@ newCardForm.addEventListener("submit", handleFormNewCard);
 
 setModalWindowEventListeners(imagePopup);
 
-addButton.addEventListener("click", function () {
-  openPopup(newCardPopup);
+editAvatarBut.addEventListener("click", function () {
+  openPopup(editAvatarPopup);
+  clearValidation(editAvatarPopup);
 });
 
+addButton.addEventListener("click", function () {
+  openPopup(newCardPopup);
+  clearValidation(newCardPopup);
+});
 
 editButton.addEventListener("click", function (el) {
   openPopup(editPopup);
-  editForm.name.value = profTittle.textContent;
-  editForm.description.value = profDescr.textContent;
+  clearValidation(editPopup);
+  getUsersInfo().then((user) => {
+    editForm.name.value = user.name;
+    editForm.description.value = user.about;
+  });
 });
 
 function openImg(evt) {
@@ -86,13 +104,34 @@ function openImg(evt) {
 }
 
 function handleFormEdit(evt) {
+  const button = evt.target.querySelector(".button");
+  button.textContent = "Сохранение...";
   evt.preventDefault();
   profTittle.textContent = nameInput.value;
   profDescr.textContent = jobInput.value;
+  const editObj = {
+    name: nameInput.value,
+    about: jobInput.value,
+  };
+  patchEditProfile(editObj);
   closePopup(evt);
+  button.textContent = "Сохранить";
+}
+
+function handleFormEditAvatar(evt) {
+  const button = evt.target.querySelector(".button");
+  button.textContent = "Сохранение...";
+  evt.preventDefault();
+  patchAvatar(avatarUrl.value).then((user) => {
+    profileAvatar.style.backgroundImage = `url(${user.avatar})`;
+  });
+  closePopup(evt);
+  button.textContent = "Сохранить";
 }
 
 function handleFormNewCard(evt) {
+  const button = evt.target.querySelector(".button");
+  button.textContent = "Сохранение...";
   evt.preventDefault();
   addCard(
     cardsList,
@@ -102,6 +141,14 @@ function handleFormNewCard(evt) {
     cardLikeSwitch,
     deleteCard
   );
+  const newCard = {
+    name: cardName.value,
+    link: cardLink.value,
+  };
   newCardForm.reset();
   closePopup(evt);
+  postNewCard(newCard);
+  button.textContent = "Сохранить";
 }
+
+enableValidation();

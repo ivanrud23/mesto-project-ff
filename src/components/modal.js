@@ -3,16 +3,16 @@ function openPopup(el) {
   document.addEventListener("keydown", escListner);
 }
 
-function closePopup(el) {
-      document
-      .querySelector(".popup_is-opened")
-      .classList.remove("popup_is-opened");
+function closePopup() {
+  document
+    .querySelector(".popup_is-opened")
+    .classList.remove("popup_is-opened");
   document.removeEventListener("keydown", escListner);
 }
 
 function escListner(el) {
   if (el.key === "Escape") {
-    closePopup(el);
+    closePopup();
   }
 }
 
@@ -28,7 +28,7 @@ function handleCloseByOverlay(el) {
     el.target.classList.contains("popup_is-opened") &&
     !el.target.classList.contains("popup__content")
   ) {
-    closePopup(el);
+    closePopup();
   }
 }
 
