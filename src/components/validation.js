@@ -1,19 +1,18 @@
-const showInputError = (popupForm, popupInput, errorMessage) => {
+const showInputError = (popupForm, popupInput, errorMessage, config) => {
   const errorElement = popupForm.querySelector(`.${popupInput.id}-error`);
-  popupInput.classList.add("popup__input-error");
-
+  popupInput.classList.add(config.errorClass);
   errorElement.textContent = errorMessage;
-  errorElement.classList.add("popup__input-error-text-active");
+  errorElement.classList.add(config.errorClassTextActive);
 };
 
-const hideInputError = (popupForm, popupInput) => {
+const hideInputError = (popupForm, popupInput, config) => {
   const errorElement = popupForm.querySelector(`.${popupInput.id}-error`);
-  popupInput.classList.remove("popup__input-error");
-  errorElement.classList.remove("popup__input-error-text-active");
+  popupInput.classList.remove(config.errorClass);
+  errorElement.classList.remove(config.errorClassTextActive);
   errorElement.textContent = "";
 };
 
-const isValid = (popupForm, popupInput) => {
+const isValid = (popupForm, popupInput, config) => {
   if (popupInput.validity.patternMismatch) {
     popupInput.setCustomValidity(popupInput.dataset.errorMessage);
   } else {
@@ -21,30 +20,30 @@ const isValid = (popupForm, popupInput) => {
   }
 
   if (!popupInput.validity.valid) {
-    showInputError(popupForm, popupInput, popupInput.validationMessage);
+    showInputError(popupForm, popupInput, popupInput.validationMessage, config);
   } else {
-    hideInputError(popupForm, popupInput);
+    hideInputError(popupForm, popupInput, config);
   }
 };
 
-const setEventListeners = (formElement) => {
-  const inputList = Array.from(formElement.querySelectorAll(".popup__input"));
-  const buttonElement = formElement.querySelector(".popup__button");
-
-  toggleButtonState(inputList, buttonElement);
+const formValidation = (formElement, config) => {
+  const inputList = Array.from(
+    formElement.querySelectorAll(config.inputSelector)
+  );
+  const buttonElement = formElement.querySelector(config.submitButtonSelector);
 
   inputList.forEach((inputElement) => {
     inputElement.addEventListener("input", () => {
-      isValid(formElement, inputElement);
-      toggleButtonState(inputList, buttonElement);
+      isValid(formElement, inputElement, config);
+      toggleButtonState(inputList, buttonElement, config);
     });
   });
 };
 
-export const enableValidation = () => {
-  const formList = Array.from(document.querySelectorAll(".popup__form"));
+export const enableValidation = (config) => {
+  const formList = Array.from(document.querySelectorAll(config.formSelector));
   formList.forEach((formElement) => {
-    setEventListeners(formElement);
+    formValidation(formElement, config);
   });
 };
 
@@ -54,31 +53,26 @@ const hasInvalidInput = (inputList) => {
   });
 };
 
-const toggleButtonState = (inputList, buttonElement) => {
-  if (hasInvalidInput(inputList)) {
-    buttonElement.disabled = true;
-    buttonElement.classList.add("popup__button-inactive");
-  } else {
+const toggleButtonState = (inputList, buttonElement, config) => {
+  if (!hasInvalidInput(inputList)) {
     buttonElement.disabled = false;
-    buttonElement.classList.remove("popup__button-inactive");
+    buttonElement.classList.remove(config.buttonClass);
+  } else {
+    buttonElement.disabled = true;
+    buttonElement.classList.add(config.buttonClass);
   }
 };
 
-export const clearValidation = (formElement) => {
-  const inputList = Array.from(formElement.querySelectorAll(".popup__input"));
-  const errorList = Array.from(
-    formElement.querySelectorAll(".popup__input-error-text")
+export const clearValidation = (formElement, config) => {
+  const inputList = Array.from(
+    formElement.querySelectorAll(config.inputSelector)
   );
+  const buttonElement = formElement.querySelector(config.submitButtonSelector);
+  toggleButtonState(inputList, buttonElement, config);
 
   inputList.forEach((inputElement) => {
-    // console.log(inputElement);
-    inputElement.classList.remove("popup__input-error");
+    hideInputError(formElement, inputElement, config);
+    inputElement.classList.remove(config.errorClass);
     inputElement.value = "";
-  });
-
-  errorList.forEach((errorElement) => {
-    // console.log(errorElement);
-    errorElement.classList.remove("popup__input-error-text-active");
-    errorElement.textContent = "";
   });
 };

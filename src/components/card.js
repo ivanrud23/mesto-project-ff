@@ -1,4 +1,4 @@
-import { putCardLike, deleteCardLike } from "../components/api.js";
+import { putCardLike, deleteCardLike, handleError } from "../components/api.js";
 
 function createCard(openImg, cardLikeSwitch, deleteCardOnServ, card, userId) {
   const cardElement = getCardTemplate();
@@ -20,8 +20,8 @@ function createCard(openImg, cardLikeSwitch, deleteCardOnServ, card, userId) {
 
   if (card.owner._id === userId) {
     deleteButton.addEventListener("click", (el) => {
-      deleteCard(el);
       deleteCardOnServ(card._id);
+      deleteCard(el);
     });
   } else {
     deleteButton.remove();
@@ -60,19 +60,14 @@ function addCard(
 }
 
 function cardLikeSwitch(evt, card, myUserId, likeCount) {
-  if (isLiked(card, myUserId)) {
-    evt.target.classList.remove("card__like-button_is-active");
-    deleteCardLike(card._id).then((res) => {
+  const likeMethod = isLiked(card, myUserId) ? deleteCardLike : putCardLike;
+  likeMethod(card._id)
+    .then((res) => {
+      evt.target.classList.toggle("card__like-button_is-active");
       card.likes = res.likes;
       likeCount.textContent = res.likes.length;
-    });
-  } else {
-    evt.target.classList.add("card__like-button_is-active");
-    putCardLike(card._id).then((res) => {
-      card.likes = res.likes;
-      likeCount.textContent = res.likes.length;
-    });
-  }
+    })
+    .catch(handleError);
 }
 
 function deleteCard(el) {

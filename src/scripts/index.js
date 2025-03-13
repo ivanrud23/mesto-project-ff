@@ -12,6 +12,7 @@ import {
   postNewCard,
   deleteCardOnServ,
   patchAvatar,
+  handleError,
 } from "../components/api.js";
 import "../pages/index.css";
 
@@ -41,30 +42,38 @@ const imageModal = imagePopup.querySelector(".popup__image");
 const profTittle = document.querySelector(".profile__title");
 const profDescr = document.querySelector(".profile__description");
 
-const popupForm = document.querySelector(".popup__form");
-const popupInput = document.querySelector(".popup__input");
+const validConfig = {
+  errorClass: "popup__input-error",
+  errorClassText: "popup__input-error-text",
+  errorSelectText: ".popup__input-error-text",
+  errorClassTextActive: "popup__input-error-text-active",
+  inputSelector: ".popup__input",
+  submitButtonSelector: ".popup__button",
+  formSelector: ".popup__form",
+  buttonClass: "popup__button-inactive",
+};
 
 let userId;
 
-getUsersInfo().then((user) => {
-  profTittle.textContent = user.name;
-  profDescr.textContent = user.about;
-  userId = user._id;
-  profileAvatar.style.backgroundImage = `url(${user.avatar})`;
-});
+Promise.all([getUsersInfo(), getInitialCards()])
+  .then(([user, cardsArray]) => {
+    profTittle.textContent = user.name;
+    profDescr.textContent = user.about;
+    userId = user._id;
+    profileAvatar.style.backgroundImage = `url(${user.avatar})`;
 
-getInitialCards().then((cardsArray) => {
-  cardsArray.forEach((cardObj) => {
-    addCard(
-      cardsList,
-      openImg,
-      cardLikeSwitch,
-      deleteCardOnServ,
-      cardObj,
-      userId
-    );
-  });
-});
+    cardsArray.forEach((cardObj) => {
+      addCard(
+        cardsList,
+        openImg,
+        cardLikeSwitch,
+        deleteCardOnServ,
+        cardObj,
+        userId
+      );
+    });
+  })
+  .catch(handleError);
 
 setModalWindowEventListeners(editAvatarPopup);
 editAvatarForm.addEventListener("submit", handleFormEditAvatar);
@@ -79,21 +88,19 @@ setModalWindowEventListeners(imagePopup);
 
 editAvatarBut.addEventListener("click", function () {
   openPopup(editAvatarPopup);
-  clearValidation(editAvatarPopup);
+  clearValidation(editAvatarPopup, validConfig);
 });
 
 addButton.addEventListener("click", function () {
   openPopup(newCardPopup);
-  clearValidation(newCardPopup);
+  clearValidation(newCardPopup, validConfig);
 });
 
 editButton.addEventListener("click", function (el) {
   openPopup(editPopup);
-  clearValidation(editPopup);
-  getUsersInfo().then((user) => {
-    editForm.name.value = user.name;
-    editForm.description.value = user.about;
-  });
+  clearValidation(editPopup, validConfig);
+  editForm.name.value = profTittle.textContent;
+  editForm.description.value = profDescr.textContent;
 });
 
 function openImg(evt) {
@@ -107,48 +114,55 @@ function handleFormEdit(evt) {
   const button = evt.target.querySelector(".button");
   button.textContent = "Сохранение...";
   evt.preventDefault();
-  profTittle.textContent = nameInput.value;
-  profDescr.textContent = jobInput.value;
   const editObj = {
     name: nameInput.value,
     about: jobInput.value,
   };
-  patchEditProfile(editObj);
+  patchEditProfile(editObj)
+    .then((res) => {
+      profTittle.textContent = res.name;
+      profDescr.textContent = res.about;
+    })
+    .catch(handleError)
+    .finally(() => {
+      button.textContent = "Сохранить";
+    });
   closePopup(evt);
-  button.textContent = "Сохранить";
 }
 
 function handleFormEditAvatar(evt) {
   const button = evt.target.querySelector(".button");
   button.textContent = "Сохранение...";
   evt.preventDefault();
-  patchAvatar(avatarUrl.value).then((user) => {
-    profileAvatar.style.backgroundImage = `url(${user.avatar})`;
-  });
+  patchAvatar(avatarUrl.value)
+    .then((user) => {
+      profileAvatar.style.backgroundImage = `url(${user.avatar})`;
+    })
+    .catch(handleError)
+    .finally(() => {
+      button.textContent = "Сохранить";
+    });
   closePopup(evt);
-  button.textContent = "Сохранить";
 }
 
 function handleFormNewCard(evt) {
   const button = evt.target.querySelector(".button");
   button.textContent = "Сохранение...";
   evt.preventDefault();
-  addCard(
-    cardsList,
-    cardName.value,
-    cardLink.value,
-    openImg,
-    cardLikeSwitch,
-    deleteCard
-  );
   const newCard = {
     name: cardName.value,
     link: cardLink.value,
   };
   newCardForm.reset();
+  postNewCard(newCard)
+    .then((cardObj) => {
+      addCard(cardsList, openImg, cardLikeSwitch, deleteCard, cardObj, userId);
+    })
+    .catch(handleError)
+    .finally(() => {
+      button.textContent = "Сохранить";
+    });
   closePopup(evt);
-  postNewCard(newCard);
-  button.textContent = "Сохранить";
 }
 
-enableValidation();
+enableValidation(validConfig);
