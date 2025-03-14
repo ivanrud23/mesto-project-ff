@@ -20,8 +20,11 @@ function createCard(openImg, cardLikeSwitch, deleteCardOnServ, card, userId) {
 
   if (card.owner._id === userId) {
     deleteButton.addEventListener("click", (el) => {
-      deleteCardOnServ(card._id);
-      deleteCard(el);
+      deleteCardOnServ(card._id)
+      .then(() => {
+        deleteCard(el);
+      })
+      .catch(handleError);
     });
   } else {
     deleteButton.remove();
@@ -30,7 +33,6 @@ function createCard(openImg, cardLikeSwitch, deleteCardOnServ, card, userId) {
   if (isLiked(card, userId)) {
     imgLikeBtn.classList.add("card__like-button_is-active");
   }
-
   return cardElement;
 }
 
